@@ -146,7 +146,11 @@ func (e *NucleiEngine) init() error {
 		return err
 	}
 
-	e.catalog = disk.NewCatalog(e.opts.NewTemplatesDirectory)
+	if e.opts.NewTemplatesDirectory != "" {
+		e.catalog = disk.NewCatalog(e.opts.NewTemplatesDirectory)
+	} else {
+		e.catalog = disk.NewCatalog(config.DefaultConfig.TemplatesDirectory)
+	}
 
 	e.executerOpts = protocols.ExecutorOptions{
 		Output:          e.customWriter,
