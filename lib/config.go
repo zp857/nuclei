@@ -425,3 +425,11 @@ func SignedTemplatesOnly() NucleiSDKOptions {
 		return nil
 	}
 }
+
+// SetNewTemplatesDirectory allows loading secrets from file
+func SetNewTemplatesDirectory(newTemplatesDirectory string) NucleiSDKOptions {
+	return func(e *NucleiEngine) error {
+		e.opts.NewTemplatesDirectory = newTemplatesDirectory
+		return nil
+	}
+}
