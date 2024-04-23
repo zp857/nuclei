@@ -237,7 +237,9 @@ func (e *NucleiEngine) processUpdateCheckResults() error {
 		if e.onUpdateAvailableCallback != nil {
 			e.onUpdateAvailableCallback(config.DefaultConfig.LatestNucleiTemplatesVersion)
 		}
-		tm := installer.TemplateManager{}
+		tm := installer.TemplateManager{
+			DisablePublicTemplates: true,
+		}
 		err = tm.UpdateIfOutdated()
 	})
 	return err
