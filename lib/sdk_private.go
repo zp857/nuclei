@@ -87,7 +87,7 @@ func (e *NucleiEngine) applyRequiredDefaults() {
 	}
 	// these templates are known to have weak matchers
 	// and idea is to disable them to avoid false positives
-	e.opts.ExcludeTags = append(e.opts.ExcludeTags, config.ReadIgnoreFile().Tags...)
+	//e.opts.ExcludeTags = append(e.opts.ExcludeTags, config.ReadIgnoreFile().Tags...)
 
 	e.inputProvider = provider.NewSimpleInputProvider()
 }
