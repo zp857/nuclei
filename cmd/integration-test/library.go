@@ -15,7 +15,6 @@ import (
 	"github.com/logrusorgru/aurora"
 	"github.com/pkg/errors"
 	"github.com/projectdiscovery/goflags"
-	"github.com/projectdiscovery/nuclei/v3/pkg/catalog/config"
 	"github.com/projectdiscovery/nuclei/v3/pkg/catalog/disk"
 	"github.com/projectdiscovery/nuclei/v3/pkg/catalog/loader"
 	"github.com/projectdiscovery/nuclei/v3/pkg/core"
@@ -80,7 +79,7 @@ func executeNucleiAsLibrary(templatePath, templateURL string) ([]string, error) 
 	_ = protocolinit.Init(defaultOpts)
 
 	defaultOpts.Templates = goflags.StringSlice{templatePath}
-	defaultOpts.ExcludeTags = config.ReadIgnoreFile().Tags
+	defaultOpts.ExcludeTags = []string{}
 
 	outputWriter := testutils.NewMockOutputWriter(defaultOpts.OmitTemplate)
 	var results []string
