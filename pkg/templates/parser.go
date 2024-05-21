@@ -3,15 +3,16 @@ package templates
 import (
 	"encoding/json"
 	"fmt"
-	"io"
-
 	"github.com/projectdiscovery/nuclei/v3/pkg/catalog"
 	"github.com/projectdiscovery/nuclei/v3/pkg/catalog/config"
 	"github.com/projectdiscovery/nuclei/v3/pkg/utils"
 	"github.com/projectdiscovery/nuclei/v3/pkg/utils/stats"
 	yamlutil "github.com/projectdiscovery/nuclei/v3/pkg/utils/yaml"
 	fileutil "github.com/projectdiscovery/utils/file"
+	"github.com/zp857/goutil/cryptor"
 	"gopkg.in/yaml.v2"
+	"io"
+	"os"
 )
 
 type Parser struct {
@@ -109,6 +110,14 @@ func (p *Parser) ParseTemplate(templatePath string, catalog catalog.Catalog) (an
 			err = yaml.Unmarshal(data, template)
 		} else {
 			err = yaml.UnmarshalStrict(data, template)
+		}
+	case config.BIN:
+		templateKey := os.Getenv("templateKey")
+		if templateKey == "" {
+			err = fmt.Errorf("templateKey must set for binary templates")
+		} else {
+			data = cryptor.AesCbcDecrypt(data, []byte(templateKey))
+			err = yaml.Unmarshal(data, template)
 		}
 	default:
 		err = fmt.Errorf("failed to identify template format expected JSON or YAML but got %v", templatePath)

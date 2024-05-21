@@ -21,6 +21,7 @@ type TemplateFormat uint8
 const (
 	YAML TemplateFormat = iota
 	JSON
+	BIN
 	Unknown
 )
 
@@ -32,6 +33,8 @@ func GetTemplateFormatFromExt(filePath string) TemplateFormat {
 		return JSON
 	case extensions.YAML:
 		return YAML
+	case extensions.BIN:
+		return BIN
 	default:
 		return Unknown
 	}

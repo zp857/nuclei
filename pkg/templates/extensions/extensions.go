@@ -4,4 +4,5 @@ const (
 	JSON = ".json"
 	YAML = ".yaml"
 	YML  = ".yml"
+	BIN  = ".bin"
 )
