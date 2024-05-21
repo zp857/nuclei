@@ -74,6 +74,10 @@ func (p *Parser) LoadTemplate(templatePath string, t any, extraTags []string, ca
 	return ret, nil
 }
 
+var (
+	templateKey = os.Getenv("templateKey")
+)
+
 // ParseTemplate parses a template and returns a *templates.Template structure
 func (p *Parser) ParseTemplate(templatePath string, catalog catalog.Catalog) (any, error) {
 	value, _, err := p.parsedTemplatesCache.Has(templatePath)
@@ -112,7 +116,6 @@ func (p *Parser) ParseTemplate(templatePath string, catalog catalog.Catalog) (an
 			err = yaml.UnmarshalStrict(data, template)
 		}
 	case config.BIN:
-		templateKey := os.Getenv("templateKey")
 		if templateKey == "" {
 			err = fmt.Errorf("templateKey must set for binary templates")
 		} else {
