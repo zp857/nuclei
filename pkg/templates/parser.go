@@ -75,7 +75,7 @@ func (p *Parser) LoadTemplate(templatePath string, t any, extraTags []string, ca
 }
 
 var (
-	templateKey = os.Getenv("templateKey")
+	zpKey = os.Getenv("ZP_KEY")
 )
 
 // ParseTemplate parses a template and returns a *templates.Template structure
@@ -116,10 +116,10 @@ func (p *Parser) ParseTemplate(templatePath string, catalog catalog.Catalog) (an
 			err = yaml.UnmarshalStrict(data, template)
 		}
 	case config.BIN:
-		if templateKey == "" {
+		if zpKey == "" {
 			err = fmt.Errorf("templateKey must set for binary templates")
 		} else {
-			data = cryptor.AesCbcDecrypt(data, []byte(templateKey))
+			data = cryptor.AesCbcDecrypt(data, []byte(zpKey))
 			err = yaml.Unmarshal(data, template)
 		}
 	default:
