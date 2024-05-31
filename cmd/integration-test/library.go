@@ -68,7 +68,7 @@ func executeNucleiAsLibrary(templatePath, templateURL string) ([]string, error) 
 	defer cache.Close()
 
 	mockProgress := &testutils.MockProgressClient{}
-	reportingClient, err := reporting.New(&reporting.Options{}, "", false)
+	reportingClient, err := reporting.New(&reporting.Options{}, "", true)
 	if err != nil {
 		return nil, err
 	}
