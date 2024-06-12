@@ -119,7 +119,7 @@ func (t *TemplateManager) installTemplatesAt(dir string) error {
 // updateTemplatesAt updates templates at given directory
 func (t *TemplateManager) updateTemplatesAt(dir string) error {
 	if t.DisablePublicTemplates {
-		gologger.Info().Msgf("Skipping update of public nuclei-templates")
+		//gologger.Info().Msgf("Skipping update of public nuclei-templates")
 		return nil
 	}
 	// firstly, read checksums from .checksum file these are used to generate stats
