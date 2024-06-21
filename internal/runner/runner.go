@@ -176,7 +176,7 @@ func New(options *types.Options) (*Runner, error) {
 	runner.catalog = disk.NewCatalog(config.DefaultConfig.TemplatesDirectory)
 
 	var httpclient *retryablehttp.Client
-	if options.ProxyInternal && types.ProxyURL != "" || types.ProxySocksURL != "" {
+	if options.ProxyInternal && options.ProxyURL != "" || options.ProxySocksURL != "" {
 		var err error
 		httpclient, err = httpclientpool.Get(options, &httpclientpool.Configuration{})
 		if err != nil {

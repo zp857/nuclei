@@ -389,6 +389,11 @@ type Options struct {
 	ProbeConcurrency int
 	// Dast only runs DAST templates
 	DAST bool
+
+	// ProxyURL is the URL for the proxy server
+	ProxyURL string
+	// ProxySocksURL is the URL for the proxy socks server
+	ProxySocksURL string
 }
 
 // ShouldLoadResume resume file

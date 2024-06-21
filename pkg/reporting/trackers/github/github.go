@@ -15,7 +15,6 @@ import (
 	"github.com/projectdiscovery/nuclei/v3/pkg/reporting/exporters/markdown/util"
 	"github.com/projectdiscovery/nuclei/v3/pkg/reporting/format"
 	"github.com/projectdiscovery/nuclei/v3/pkg/reporting/trackers/filters"
-	"github.com/projectdiscovery/nuclei/v3/pkg/types"
 	"github.com/projectdiscovery/retryablehttp-go"
 	"golang.org/x/oauth2"
 )
@@ -53,6 +52,11 @@ type Options struct {
 
 	HttpClient *retryablehttp.Client `yaml:"-"`
 	OmitRaw    bool                  `yaml:"-"`
+
+	// ProxyURL is the URL for the proxy server
+	ProxyURL string
+	// ProxySocksURL is the URL for the proxy socks server
+	ProxySocksURL string
 }
 
 // New creates a new issue tracker integration client based on options.
@@ -65,8 +69,8 @@ func New(options *Options) (*Integration, error) {
 
 	// patch transport to support proxy - only http
 	// TODO: investigate if it's possible to reuse existing retryablehttp
-	if types.ProxyURL != "" {
-		if proxyURL, err := url.Parse(types.ProxyURL); err == nil {
+	if options.ProxyURL != "" {
+		if proxyURL, err := url.Parse(options.ProxyURL); err == nil {
 			tc.Transport.(*http.Transport).Proxy = http.ProxyURL(proxyURL)
 		}
 	}

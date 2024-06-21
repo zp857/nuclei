@@ -106,7 +106,7 @@ func (e *NucleiEngine) init() error {
 		return err
 	}
 
-	if e.opts.ProxyInternal && types.ProxyURL != "" || types.ProxySocksURL != "" {
+	if e.opts.ProxyInternal && e.opts.ProxyURL != "" || e.opts.ProxySocksURL != "" {
 		httpclient, err := httpclientpool.Get(e.opts, &httpclientpool.Configuration{})
 		if err != nil {
 			return err

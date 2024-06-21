@@ -132,10 +132,10 @@ func (c *Configuration) HasStandardOptions() bool {
 func GetRawHTTP(options *types.Options) *rawhttp.Client {
 	if rawHttpClient == nil {
 		rawHttpOptions := rawhttp.DefaultOptions
-		if types.ProxyURL != "" {
-			rawHttpOptions.Proxy = types.ProxyURL
-		} else if types.ProxySocksURL != "" {
-			rawHttpOptions.Proxy = types.ProxySocksURL
+		if options.ProxyURL != "" {
+			rawHttpOptions.Proxy = options.ProxyURL
+		} else if options.ProxySocksURL != "" {
+			rawHttpOptions.Proxy = options.ProxySocksURL
 		} else if Dialer != nil {
 			rawHttpOptions.FastDialer = Dialer
 		}
@@ -244,12 +244,12 @@ func wrappedGet(options *types.Options, configuration *Configuration) (*retryabl
 		DisableKeepAlives:   disableKeepAlives,
 	}
 
-	if types.ProxyURL != "" {
-		if proxyURL, err := url.Parse(types.ProxyURL); err == nil {
+	if options.ProxyURL != "" {
+		if proxyURL, err := url.Parse(options.ProxyURL); err == nil {
 			transport.Proxy = http.ProxyURL(proxyURL)
 		}
-	} else if types.ProxySocksURL != "" {
-		socksURL, proxyErr := url.Parse(types.ProxySocksURL)
+	} else if options.ProxySocksURL != "" {
+		socksURL, proxyErr := url.Parse(options.ProxySocksURL)
 		if proxyErr != nil {
 			return nil, proxyErr
 		}

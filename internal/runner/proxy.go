@@ -51,12 +51,12 @@ func loadProxyServers(options *types.Options) error {
 		os.Setenv(types.HTTP_PROXY_ENV, proxyURL.String())
 	}
 	if proxyURL.Scheme == proxyutils.HTTP || proxyURL.Scheme == proxyutils.HTTPS {
-		types.ProxyURL = proxyURL.String()
-		types.ProxySocksURL = ""
+		options.ProxyURL = proxyURL.String()
+		options.ProxySocksURL = ""
 		gologger.Verbose().Msgf("Using %s as proxy server", proxyURL.String())
 	} else if proxyURL.Scheme == proxyutils.SOCKS5 {
-		types.ProxyURL = ""
-		types.ProxySocksURL = proxyURL.String()
+		options.ProxyURL = ""
+		options.ProxySocksURL = proxyURL.String()
 		gologger.Verbose().Msgf("Using %s as socket proxy server", proxyURL.String())
 	}
 	return nil
