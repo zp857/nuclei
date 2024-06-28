@@ -210,6 +210,9 @@ func (e *NucleiEngine) init() error {
 
 	httpxOptions := httpx.DefaultOptions
 	httpxOptions.Timeout = 5 * time.Second
+	// diy options
+	httpxOptions.CdnCheck = "false"
+	httpxOptions.WithDialerHistory = false
 	if client, err := httpx.New(&httpxOptions); err != nil {
 		return err
 	} else {
