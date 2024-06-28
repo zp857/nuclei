@@ -1,6 +1,8 @@
 module github.com/projectdiscovery/nuclei/v3
 
-go 1.21
+go 1.21.5
+
+toolchain go1.22.4
 
 require (
 	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible
@@ -8,7 +10,7 @@ require (
 	github.com/antchfx/htmlquery v1.3.0
 	github.com/bluele/gcache v0.0.2
 	github.com/go-playground/validator/v10 v10.14.1
-	github.com/go-rod/rod v0.114.0
+	github.com/go-rod/rod v0.114.8
 	github.com/gobwas/ws v1.2.1
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/invopop/jsonschema v0.12.0
@@ -32,7 +34,7 @@ require (
 	github.com/segmentio/ksuid v1.0.4
 	github.com/shirou/gopsutil/v3 v3.24.2 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
-	github.com/spf13/cast v1.5.1
+	github.com/spf13/cast v1.6.0
 	github.com/syndtr/goleveldb v1.0.0
 	github.com/valyala/fasttemplate v1.2.2
 	github.com/weppos/publicsuffix-go v0.30.2
@@ -58,6 +60,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.27
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.11.72
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.37.0
+	github.com/cespare/xxhash v1.1.0
 	github.com/charmbracelet/glamour v0.6.0
 	github.com/clbanning/mxj/v2 v2.7.0
 	github.com/denisenkom/go-mssqldb v0.12.3
@@ -101,6 +104,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/tarunKoyalwar/goleak v0.0.0-20240429141123-0efa90dbdcf9
 	github.com/zmap/zgrab2 v0.1.8-0.20230806160807-97ba87c0e706
+	github.com/zp857/goutil v0.0.0-20240628034337-7f0eed791116
 	golang.org/x/term v0.21.0
 	gopkg.in/yaml.v3 v3.0.1
 	moul.io/http2curl v1.0.0
@@ -129,7 +133,6 @@ require (
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/bytedance/sonic v1.9.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
-	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/cheggaaa/pb/v3 v3.1.4 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
@@ -144,6 +147,7 @@ require (
 	github.com/docker/docker v24.0.9+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/fatih/color v1.16.0 // indirect
+	github.com/forgoer/openssl v1.6.0 // indirect
 	github.com/free5gc/util v1.0.5-0.20230511064842-2e120956883b // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/gaissmai/bart v0.9.5 // indirect
@@ -191,11 +195,11 @@ require (
 	github.com/moby/term v0.5.0 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
-	github.com/muesli/termenv v0.15.1 // indirect
+	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.2 // indirect
 	github.com/opencontainers/runc v1.1.12 // indirect
-	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
+	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/perimeterx/marshmallow v1.1.5 // indirect
 	github.com/pierrec/lz4/v4 v4.1.21 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
@@ -251,7 +255,7 @@ require (
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/caddyserver/certmagic v0.19.2 // indirect
 	github.com/cnf/structhash v0.0.0-20201127153200-e1b16c1ebc08 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dimchansky/utfbom v1.1.1 // indirect
 	github.com/dsnet/compress v0.0.2-0.20210315054119-f66993602bf5 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
@@ -282,7 +286,7 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.26 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/projectdiscovery/blackrock v0.0.1 // indirect
 	github.com/projectdiscovery/networkpolicy v0.0.9
