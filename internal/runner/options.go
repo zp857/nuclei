@@ -3,6 +3,7 @@ package runner
 import (
 	"bufio"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -18,6 +19,7 @@ import (
 	"github.com/projectdiscovery/gologger/levels"
 	"github.com/projectdiscovery/nuclei/v3/pkg/catalog/config"
 	"github.com/projectdiscovery/nuclei/v3/pkg/protocols/common/protocolinit"
+	"github.com/projectdiscovery/nuclei/v3/pkg/protocols/common/protocolstate"
 	"github.com/projectdiscovery/nuclei/v3/pkg/protocols/common/utils/vardump"
 	"github.com/projectdiscovery/nuclei/v3/pkg/protocols/headless/engine"
 	"github.com/projectdiscovery/nuclei/v3/pkg/reporting"
@@ -25,6 +27,7 @@ import (
 	"github.com/projectdiscovery/nuclei/v3/pkg/reporting/exporters/jsonl"
 	"github.com/projectdiscovery/nuclei/v3/pkg/reporting/exporters/markdown"
 	"github.com/projectdiscovery/nuclei/v3/pkg/reporting/exporters/sarif"
+	"github.com/projectdiscovery/nuclei/v3/pkg/templates/extensions"
 	"github.com/projectdiscovery/nuclei/v3/pkg/types"
 	"github.com/projectdiscovery/nuclei/v3/pkg/utils/yaml"
 	fileutil "github.com/projectdiscovery/utils/file"
@@ -74,6 +77,31 @@ func ParseOptions(options *types.Options) {
 		}
 		os.Exit(0)
 	}
+
+	defaultProfilesPath := filepath.Join(config.DefaultConfig.GetTemplateDir(), "profiles")
+	if options.ListTemplateProfiles {
+		gologger.Print().Msgf(
+			"\nListing available %v nuclei template profiles for %v",
+			config.DefaultConfig.TemplateVersion,
+			config.DefaultConfig.TemplatesDirectory,
+		)
+		templatesRootDir := config.DefaultConfig.GetTemplateDir()
+		err := filepath.WalkDir(defaultProfilesPath, func(iterItem string, d fs.DirEntry, err error) error {
+			ext := filepath.Ext(iterItem)
+			isYaml := ext == extensions.YAML || ext == extensions.YML
+			if err != nil || d.IsDir() || !isYaml {
+				return nil
+			}
+			if profileRelPath, err := filepath.Rel(templatesRootDir, iterItem); err == nil {
+				gologger.Print().Msgf("%s (%s)\n", profileRelPath, strings.TrimSuffix(filepath.Base(iterItem), ext))
+			}
+			return nil
+		})
+		if err != nil {
+			gologger.Error().Msgf("%s\n", err)
+		}
+		os.Exit(0)
+	}
 	if options.StoreResponseDir != DefaultDumpTrafficOutputFolder && !options.StoreResponse {
 		gologger.Debug().Msgf("Store response directory specified, enabling \"store-resp\" flag automatically\n")
 		options.StoreResponse = true
@@ -87,7 +115,12 @@ func ParseOptions(options *types.Options) {
 	// Load the resolvers if user asked for them
 	loadResolvers(options)
 
-	err := protocolinit.Init(options)
+	err := protocolstate.Init(options)
+	if err != nil {
+		gologger.Fatal().Msgf("Could not initialize protocol state: %s\n", err)
+	}
+
+	err = protocolinit.Init(options)
 	if err != nil {
 		gologger.Fatal().Msgf("Could not initialize protocols: %s\n", err)
 	}
@@ -289,9 +322,6 @@ func createReportingOptions(options *types.Options) (*reporting.Options, error) 
 
 // configureOutput configures the output logging levels to be displayed on the screen
 func configureOutput(options *types.Options) {
-	// disable standard logger (ref: https://github.com/golang/go/issues/19895)
-	defer logutil.DisableDefaultLogger()
-
 	if options.NoColor {
 		gologger.DefaultLogger.SetFormatter(formatter.NewCLI(true))
 	}
@@ -310,6 +340,9 @@ func configureOutput(options *types.Options) {
 	if options.Silent {
 		gologger.DefaultLogger.SetMaxLevel(levels.LevelSilent)
 	}
+
+	// disable standard logger (ref: https://github.com/golang/go/issues/19895)
+	logutil.DisableDefaultLogger()
 }
 
 // loadResolvers loads resolvers from both user-provided flags and file

@@ -6,7 +6,6 @@ package http
 //		-> request.executeGeneratedFuzzingRequest [execute final generated fuzzing request and get result]
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -24,6 +23,7 @@ import (
 	protocolutils "github.com/projectdiscovery/nuclei/v3/pkg/protocols/utils"
 	"github.com/projectdiscovery/nuclei/v3/pkg/types"
 	"github.com/projectdiscovery/retryablehttp-go"
+	"github.com/projectdiscovery/useragent"
 	urlutil "github.com/projectdiscovery/utils/url"
 )
 
@@ -89,6 +89,9 @@ func (request *Request) executeFuzzingRule(input *contextargs.Context, previous 
 	if err != nil {
 		return errors.Wrap(err, "fuzz: could not build request from url")
 	}
+	userAgent := useragent.PickRandom()
+	baseRequest.Header.Set("User-Agent", userAgent.Raw)
+
 	// execute with one value first to checks its applicability
 	err = request.executeAllFuzzingRules(inputx, previous, baseRequest, callback)
 	if err != nil {
@@ -110,20 +113,34 @@ func (request *Request) executeFuzzingRule(input *contextargs.Context, previous 
 func (request *Request) executeAllFuzzingRules(input *contextargs.Context, values map[string]interface{}, baseRequest *retryablehttp.Request, callback protocols.OutputEventCallback) error {
 	applicable := false
 	for _, rule := range request.Fuzzing {
+		select {
+		case <-input.Context().Done():
+			return input.Context().Err()
+		default:
+		}
+
 		err := rule.Execute(&fuzz.ExecuteRuleInput{
-			Input: input,
+			Input:             input,
+			DisplayFuzzPoints: request.options.Options.DisplayFuzzPoints,
 			Callback: func(gr fuzz.GeneratedRequest) bool {
+				select {
+				case <-input.Context().Done():
+					return false
+				default:
+				}
+
 				// TODO: replace this after scanContext Refactor
 				return request.executeGeneratedFuzzingRequest(gr, input, callback)
 			},
 			Values:      values,
-			BaseRequest: baseRequest.Clone(context.TODO()),
+			BaseRequest: baseRequest.Clone(input.Context()),
 		})
 		if err == nil {
 			applicable = true
 			continue
 		}
 		if fuzz.IsErrRuleNotApplicable(err) {
+			gologger.Verbose().Msgf("[%s] fuzz: rule not applicable : %s\n", request.options.TemplateID, err)
 			continue
 		}
 		if err == types.ErrNoMoreRequests {
@@ -142,7 +159,7 @@ func (request *Request) executeAllFuzzingRules(input *contextargs.Context, value
 func (request *Request) executeGeneratedFuzzingRequest(gr fuzz.GeneratedRequest, input *contextargs.Context, callback protocols.OutputEventCallback) bool {
 	hasInteractMatchers := interactsh.HasMatchers(request.CompiledOperators)
 	hasInteractMarkers := len(gr.InteractURLs) > 0
-	if request.options.HostErrorsCache != nil && request.options.HostErrorsCache.Check(input.MetaInput.Input) {
+	if request.options.HostErrorsCache != nil && request.options.HostErrorsCache.Check(input) {
 		return false
 	}
 	request.options.RateLimitTake()
@@ -154,6 +171,14 @@ func (request *Request) executeGeneratedFuzzingRequest(gr fuzz.GeneratedRequest,
 	}
 	var gotMatches bool
 	requestErr := request.executeRequest(input, req, gr.DynamicValues, hasInteractMatchers, func(event *output.InternalWrappedEvent) {
+		for _, result := range event.Results {
+			result.IsFuzzingResult = true
+			result.FuzzingMethod = gr.Request.Method
+			result.FuzzingParameter = gr.Parameter
+			result.FuzzingPosition = gr.Component.Name()
+		}
+
+		setInteractshCallback := false
 		if hasInteractMarkers && hasInteractMatchers && request.options.Interactsh != nil {
 			requestData := &interactsh.RequestData{
 				MakeResultFunc: request.MakeResultEvent,
@@ -161,7 +186,10 @@ func (request *Request) executeGeneratedFuzzingRequest(gr fuzz.GeneratedRequest,
 				Operators:      request.CompiledOperators,
 				MatchFunc:      request.Match,
 				ExtractFunc:    request.Extract,
+				Parameter:      gr.Parameter,
+				Request:        gr.Request,
 			}
+			setInteractshCallback = true
 			request.options.Interactsh.RequestEvent(gr.InteractURLs, requestData)
 			gotMatches = request.options.Interactsh.AlreadyMatched(requestData)
 		} else {
@@ -171,6 +199,13 @@ func (request *Request) executeGeneratedFuzzingRequest(gr fuzz.GeneratedRequest,
 		if event.OperatorsResult != nil {
 			gotMatches = event.OperatorsResult.Matched
 		}
+		if request.options.FuzzParamsFrequency != nil && !setInteractshCallback {
+			if !gotMatches {
+				request.options.FuzzParamsFrequency.MarkParameter(gr.Parameter, gr.Request.URL.String(), request.options.TemplateID)
+			} else {
+				request.options.FuzzParamsFrequency.UnmarkParameter(gr.Parameter, gr.Request.URL.String(), request.options.TemplateID)
+			}
+		}
 	}, 0)
 	// If a variable is unresolved, skip all further requests
 	if errors.Is(requestErr, ErrMissingVars) {
@@ -178,7 +213,7 @@ func (request *Request) executeGeneratedFuzzingRequest(gr fuzz.GeneratedRequest,
 	}
 	if requestErr != nil {
 		if request.options.HostErrorsCache != nil {
-			request.options.HostErrorsCache.MarkFailed(input.MetaInput.Input, requestErr)
+			request.options.HostErrorsCache.MarkFailed(input, requestErr)
 		}
 		gologger.Verbose().Msgf("[%s] Error occurred in request: %s\n", request.options.TemplateID, requestErr)
 	}

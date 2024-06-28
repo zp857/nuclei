@@ -16,7 +16,6 @@ import (
 	"golang.org/x/net/proxy"
 	"golang.org/x/net/publicsuffix"
 
-	"github.com/projectdiscovery/fastdialer/fastdialer"
 	"github.com/projectdiscovery/fastdialer/fastdialer/ja3/impersonate"
 	"github.com/projectdiscovery/nuclei/v3/pkg/protocols/common/protocolstate"
 	"github.com/projectdiscovery/nuclei/v3/pkg/protocols/utils"
@@ -28,20 +27,31 @@ import (
 )
 
 var (
-	// Dialer is a copy of the fastdialer from protocolstate
-	Dialer *fastdialer.Dialer
-
 	rawHttpClient     *rawhttp.Client
 	forceMaxRedirects int
 	normalClient      *retryablehttp.Client
 	clientPool        *mapsutil.SyncLockMap[string, *retryablehttp.Client]
+	// MaxResponseHeaderTimeout is the timeout for response headers
+	// to be read from the server (this prevents infinite hang started by server if any)
+	// Note: this will be overridden temporarily when using @timeout request annotation
+	MaxResponseHeaderTimeout = time.Duration(10) * time.Second
+	// HttpTimeoutMultiplier is the multiplier for the http timeout
+	HttpTimeoutMultiplier = 3
 )
+
+// GetHttpTimeout returns the http timeout for the client
+func GetHttpTimeout(opts *types.Options) time.Duration {
+	return time.Duration(opts.Timeout*HttpTimeoutMultiplier) * time.Second
+}
 
 // Init initializes the clientpool implementation
 func Init(options *types.Options) error {
 	// Don't create clients if already created in the past.
 	if normalClient != nil {
 		return nil
+	}
+	if options.Timeout > 10 {
+		MaxResponseHeaderTimeout = time.Duration(options.Timeout) * time.Second
 	}
 	if options.ShouldFollowHTTPRedirects() {
 		forceMaxRedirects = options.MaxRedirects
@@ -101,6 +111,8 @@ type Configuration struct {
 	RedirectFlow RedirectFlow
 	// Connection defines custom connection configuration
 	Connection *ConnectionConfiguration
+	// ResponseHeaderTimeout is the timeout for response body to be read from the server
+	ResponseHeaderTimeout time.Duration
 }
 
 // Hash returns the hash of the configuration to allow client pooling
@@ -119,13 +131,15 @@ func (c *Configuration) Hash() string {
 	builder.WriteString(strconv.FormatBool(c.DisableCookie))
 	builder.WriteString("c")
 	builder.WriteString(strconv.FormatBool(c.Connection != nil))
+	builder.WriteString("r")
+	builder.WriteString(strconv.FormatInt(int64(c.ResponseHeaderTimeout.Seconds()), 10))
 	hash := builder.String()
 	return hash
 }
 
 // HasStandardOptions checks whether the configuration requires custom settings
 func (c *Configuration) HasStandardOptions() bool {
-	return c.Threads == 0 && c.MaxRedirects == 0 && c.RedirectFlow == DontFollowRedirect && c.DisableCookie && c.Connection == nil && !c.NoTimeout
+	return c.Threads == 0 && c.MaxRedirects == 0 && c.RedirectFlow == DontFollowRedirect && c.DisableCookie && c.Connection == nil && !c.NoTimeout && c.ResponseHeaderTimeout == 0
 }
 
 // GetRawHTTP returns the rawhttp request client
@@ -139,7 +153,7 @@ func GetRawHTTP(options *types.Options) *rawhttp.Client {
 		} else if Dialer != nil {
 			rawHttpOptions.FastDialer = Dialer
 		}
-		rawHttpOptions.Timeout = time.Duration(options.Timeout) * time.Second
+		rawHttpOptions.Timeout = GetHttpTimeout(options)
 		rawHttpClient = rawhttp.NewClient(rawHttpOptions)
 	}
 	return rawHttpClient
@@ -157,10 +171,6 @@ func Get(options *types.Options, configuration *Configuration) (*retryablehttp.C
 func wrappedGet(options *types.Options, configuration *Configuration) (*retryablehttp.Client, error) {
 	var err error
 
-	if Dialer == nil {
-		Dialer = protocolstate.Dialer
-	}
-
 	hash := configuration.Hash()
 	if client, ok := clientPool.Get(hash); ok {
 		return client, nil
@@ -172,6 +182,9 @@ func wrappedGet(options *types.Options, configuration *Configuration) (*retryabl
 	maxIdleConns := 0
 	maxConnsPerHost := 0
 	maxIdleConnsPerHost := -1
+	// do not split given timeout into chunks for retry
+	// because this won't work on slow hosts
+	retryableHttpOptions.NoAdjustTimeout = true
 
 	if configuration.Threads > 0 || options.ScanStrategy == scanstrategy.HostSpray.String() {
 		// Single host
@@ -225,23 +238,30 @@ func wrappedGet(options *types.Options, configuration *Configuration) (*retryabl
 		return nil, errors.Wrap(err, "could not create client certificate")
 	}
 
+	// responseHeaderTimeout is max timeout for response headers to be read
+	responseHeaderTimeout := MaxResponseHeaderTimeout
+	if configuration.ResponseHeaderTimeout != 0 {
+		responseHeaderTimeout = configuration.ResponseHeaderTimeout
+	}
+
 	transport := &http.Transport{
 		ForceAttemptHTTP2: options.ForceAttemptHTTP2,
-		DialContext:       Dialer.Dial,
+		DialContext:       protocolstate.Dialer.Dial,
 		DialTLSContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
 			if options.TlsImpersonate {
-				return Dialer.DialTLSWithConfigImpersonate(ctx, network, addr, tlsConfig, impersonate.Random, nil)
+				return protocolstate.Dialer.DialTLSWithConfigImpersonate(ctx, network, addr, tlsConfig, impersonate.Random, nil)
 			}
 			if options.HasClientCertificates() || options.ForceAttemptHTTP2 {
-				return Dialer.DialTLSWithConfig(ctx, network, addr, tlsConfig)
+				return protocolstate.Dialer.DialTLSWithConfig(ctx, network, addr, tlsConfig)
 			}
-			return Dialer.DialTLS(ctx, network, addr)
+			return protocolstate.Dialer.DialTLS(ctx, network, addr)
 		},
-		MaxIdleConns:        maxIdleConns,
-		MaxIdleConnsPerHost: maxIdleConnsPerHost,
-		MaxConnsPerHost:     maxConnsPerHost,
-		TLSClientConfig:     tlsConfig,
-		DisableKeepAlives:   disableKeepAlives,
+		MaxIdleConns:          maxIdleConns,
+		MaxIdleConnsPerHost:   maxIdleConnsPerHost,
+		MaxConnsPerHost:       maxConnsPerHost,
+		TLSClientConfig:       tlsConfig,
+		DisableKeepAlives:     disableKeepAlives,
+		ResponseHeaderTimeout: responseHeaderTimeout,
 	}
 
 	if options.ProxyURL != "" {
@@ -288,7 +308,7 @@ func wrappedGet(options *types.Options, configuration *Configuration) (*retryabl
 		CheckRedirect: makeCheckRedirectFunc(redirectFlow, maxRedirects),
 	}
 	if !configuration.NoTimeout {
-		httpclient.Timeout = time.Duration(options.Timeout) * time.Second
+		httpclient.Timeout = GetHttpTimeout(options)
 	}
 	client := retryablehttp.NewWithHTTPClient(httpclient, retryableHttpOptions)
 	if jar != nil {
@@ -340,7 +360,7 @@ func makeCheckRedirectFunc(redirectType RedirectFlow, maxRedirects int) checkRed
 	}
 }
 
-func checkMaxRedirects(req *http.Request, via []*http.Request, maxRedirects int) error {
+func checkMaxRedirects(_ *http.Request, via []*http.Request, maxRedirects int) error {
 	if maxRedirects == 0 {
 		if len(via) > defaultMaxRedirects {
 			return http.ErrUseLastResponse

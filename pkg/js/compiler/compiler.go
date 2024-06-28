@@ -10,7 +10,13 @@ import (
 
 	"github.com/projectdiscovery/nuclei/v3/pkg/protocols/common/generators"
 	contextutil "github.com/projectdiscovery/utils/context"
+	"github.com/projectdiscovery/utils/errkit"
 	stringsutil "github.com/projectdiscovery/utils/strings"
+)
+
+var (
+	// ErrJSExecDeadline is the error returned when alloted time for script execution exceeds
+	ErrJSExecDeadline = errkit.New("js engine execution deadline exceeded").SetKind(errkit.ErrKindDeadline).Build()
 )
 
 // Compiler provides a runtime to execute goja runtime
@@ -36,6 +42,8 @@ type ExecuteOptions struct {
 	Timeout int
 	// Source is original source of the script
 	Source *string
+
+	Context context.Context
 
 	// Manually exported objects
 	exports map[string]interface{}
@@ -77,13 +85,13 @@ func (c *Compiler) Execute(code string, args *ExecuteArgs) (ExecuteResult, error
 	if err != nil {
 		return nil, err
 	}
-	return c.ExecuteWithOptions(p, args, &ExecuteOptions{})
+	return c.ExecuteWithOptions(p, args, &ExecuteOptions{Context: context.Background()})
 }
 
 // ExecuteWithOptions executes a script with the provided options.
 func (c *Compiler) ExecuteWithOptions(program *goja.Program, args *ExecuteArgs, opts *ExecuteOptions) (ExecuteResult, error) {
 	if opts == nil {
-		opts = &ExecuteOptions{}
+		opts = &ExecuteOptions{Context: context.Background()}
 	}
 	if args == nil {
 		args = NewExecuteArgs()
@@ -105,7 +113,7 @@ func (c *Compiler) ExecuteWithOptions(program *goja.Program, args *ExecuteArgs, 
 	}
 
 	// execute with context and timeout
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(opts.Timeout)*time.Second)
+	ctx, cancel := context.WithTimeoutCause(opts.Context, time.Duration(opts.Timeout)*time.Second, ErrJSExecDeadline)
 	defer cancel()
 	// execute the script
 	results, err := contextutil.ExecFuncWithTwoReturns(ctx, func() (val goja.Value, err error) {
@@ -117,6 +125,9 @@ func (c *Compiler) ExecuteWithOptions(program *goja.Program, args *ExecuteArgs, 
 		return ExecuteProgram(program, args, opts)
 	})
 	if err != nil {
+		if val, ok := err.(*goja.Exception); ok {
+			err = val.Unwrap()
+		}
 		return nil, err
 	}
 	var res ExecuteResult

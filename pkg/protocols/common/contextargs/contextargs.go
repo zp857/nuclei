@@ -1,6 +1,7 @@
 package contextargs
 
 import (
+	"context"
 	"net/http/cookiejar"
 	"strings"
 	"sync/atomic"
@@ -19,6 +20,8 @@ var (
 
 // Context implements a shared context struct to share information across multiple templates within a workflow
 type Context struct {
+	ctx context.Context
+
 	// Meta is the target for the executor
 	MetaInput *MetaInput
 
@@ -30,17 +33,25 @@ type Context struct {
 }
 
 // Create a new contextargs instance
-func New() *Context {
-	return NewWithInput("")
+func New(ctx context.Context) *Context {
+	return NewWithInput(ctx, "")
+}
+
+// NewWithMetaInput creates a new contextargs instance with meta input
+func NewWithMetaInput(ctx context.Context, input *MetaInput) *Context {
+	n := New(ctx)
+	n.MetaInput = input
+	return n
 }
 
 // Create a new contextargs instance with input string
-func NewWithInput(input string) *Context {
+func NewWithInput(ctx context.Context, input string) *Context {
 	jar, err := cookiejar.New(nil)
 	if err != nil {
 		gologger.Error().Msgf("contextargs: could not create cookie jar: %s\n", err)
 	}
 	return &Context{
+		ctx:       ctx,
 		MetaInput: &MetaInput{Input: input},
 		CookieJar: jar,
 		args: &mapsutil.SyncLockMap[string, interface{}]{
@@ -48,6 +59,11 @@ func NewWithInput(input string) *Context {
 			ReadOnly: atomic.Bool{},
 		},
 	}
+}
+
+// Context returns the context of the current contextargs
+func (ctx *Context) Context() context.Context {
+	return ctx.ctx
 }
 
 // Set the specific key-value pair
@@ -158,9 +174,27 @@ func (ctx *Context) HasArgs() bool {
 
 func (ctx *Context) Clone() *Context {
 	newCtx := &Context{
+		ctx:       ctx.ctx,
 		MetaInput: ctx.MetaInput.Clone(),
 		args:      ctx.args.Clone(),
 		CookieJar: ctx.CookieJar,
 	}
 	return newCtx
+}
+
+// GetCopyIfHostOutdated returns a new contextargs if the host is outdated
+func GetCopyIfHostOutdated(ctx *Context, url string) *Context {
+	if ctx.MetaInput.Input == "" {
+		newctx := ctx.Clone()
+		newctx.MetaInput.Input = url
+		return newctx
+	}
+	orig, _ := urlutil.Parse(ctx.MetaInput.Input)
+	newURL, _ := urlutil.Parse(url)
+	if orig != nil && newURL != nil && orig.Host != newURL.Host {
+		newCtx := ctx.Clone()
+		newCtx.MetaInput.Input = newURL.Host
+		return newCtx
+	}
+	return ctx
 }

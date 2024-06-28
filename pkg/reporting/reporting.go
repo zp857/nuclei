@@ -273,9 +273,10 @@ func (c *ReportingClient) CreateIssue(event *output.ResultEvent) error {
 
 		for _, tracker := range c.trackers {
 			// process tracker specific allow/deny list
-			if tracker.ShouldFilter(event) {
+			if !tracker.ShouldFilter(event) {
 				continue
 			}
+
 			trackerName := tracker.Name()
 			stats, statsOk := c.stats[trackerName]
 

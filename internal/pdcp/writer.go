@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"sync/atomic"
 	"time"
 
@@ -17,7 +18,9 @@ import (
 	"github.com/projectdiscovery/nuclei/v3/pkg/output"
 	"github.com/projectdiscovery/retryablehttp-go"
 	pdcpauth "github.com/projectdiscovery/utils/auth/pdcp"
+	"github.com/projectdiscovery/utils/env"
 	errorutil "github.com/projectdiscovery/utils/errors"
+	unitutils "github.com/projectdiscovery/utils/unit"
 	updateutils "github.com/projectdiscovery/utils/update"
 	urlutil "github.com/projectdiscovery/utils/url"
 )
@@ -25,11 +28,18 @@ import (
 const (
 	uploadEndpoint = "/v1/scans/import"
 	appendEndpoint = "/v1/scans/%s/import"
-	flushTimer     = time.Duration(1) * time.Minute
-	MaxChunkSize   = 1024 * 1024 * 4 // 4 MB
+	flushTimer     = time.Minute
+	MaxChunkSize   = 4 * unitutils.Mega // 4 MB
+	xidRe          = `^[a-z0-9]{20}$`
+	teamIDHeader   = "X-Team-Id"
 )
 
-var _ output.Writer = &UploadWriter{}
+var (
+	xidRegex               = regexp.MustCompile(xidRe)
+	_        output.Writer = &UploadWriter{}
+	// teamID if given
+	teamID = env.GetEnvOrDefault("PDCP_TEAM_ID", "")
+)
 
 // UploadWriter is a writer that uploads its output to pdcp
 // server to enable web dashboard and more
@@ -41,6 +51,7 @@ type UploadWriter struct {
 	cancel    context.CancelFunc
 	done      chan struct{}
 	scanID    string
+	scanName  string
 	counter   atomic.Int32
 }
 
@@ -86,8 +97,17 @@ func NewUploadWriter(ctx context.Context, creds *pdcpauth.PDCPCredentials) (*Upl
 }
 
 // SetScanID sets the scan id for the upload writer
-func (u *UploadWriter) SetScanID(id string) {
+func (u *UploadWriter) SetScanID(id string) error {
+	if !xidRegex.MatchString(id) {
+		return fmt.Errorf("invalid scan id provided")
+	}
 	u.scanID = id
+	return nil
+}
+
+// SetScanName sets the scan name for the upload writer
+func (u *UploadWriter) SetScanName(name string) {
+	u.scanName = name
 }
 
 func (u *UploadWriter) autoCommit(ctx context.Context, r *io.PipeReader) {
@@ -220,8 +240,17 @@ func (u *UploadWriter) getRequest(bin []byte) (*retryablehttp.Request, error) {
 		return nil, errorutil.NewWithErr(err).Msgf("could not create cloud upload request")
 	}
 	// add pdtm meta params
-	req.URL.RawQuery = updateutils.GetpdtmParams(config.Version)
+	req.URL.Params.Merge(updateutils.GetpdtmParams(config.Version))
+	// if it is upload endpoint also include name if it exists
+	if u.scanName != "" && req.URL.Path == uploadEndpoint {
+		req.URL.Params.Add("name", u.scanName)
+	}
+	req.URL.Update()
+
 	req.Header.Set(pdcpauth.ApiKeyHeaderName, u.creds.APIKey)
+	if teamID != "" {
+		req.Header.Set(teamIDHeader, teamID)
+	}
 	req.Header.Set("Content-Type", "application/octet-stream")
 	req.Header.Set("Accept", "application/json")
 	return req, nil
