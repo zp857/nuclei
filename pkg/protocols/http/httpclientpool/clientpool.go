@@ -153,6 +153,12 @@ func GetRawHTTP(options *types.Options) *rawhttp.Client {
 		} else if protocolstate.Dialer != nil {
 			rawHttpOptions.FastDialer = protocolstate.Dialer
 		}
+		if protocolstate.Dialer == nil {
+			err := protocolstate.Init(options)
+			if err == nil {
+				rawHttpOptions.FastDialer = protocolstate.Dialer
+			}
+		}
 		rawHttpOptions.Timeout = GetHttpTimeout(options)
 		rawHttpClient = rawhttp.NewClient(rawHttpOptions)
 	}

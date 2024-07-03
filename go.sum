@@ -1138,8 +1138,12 @@ github.com/zmap/zgrab2 v0.1.8-0.20230806160807-97ba87c0e706/go.mod h1:re2kMcs84X
 github.com/zmap/zlint/v3 v3.0.0/go.mod h1:paGwFySdHIBEMJ61YjoqT4h7Ge+fdYG4sUQhnTb1lJ8=
 github.com/zp857/goutil v0.0.0-20240628034337-7f0eed791116 h1:CBfs2DY3TqEI8BkaKY43DaAHehRgY30h/aghccXhk4I=
 github.com/zp857/goutil v0.0.0-20240628034337-7f0eed791116/go.mod h1:j+yVvFvEEKQPU1xVe7uGO1Ms1TdE9rn5lQcYL1Lj8n4=
+github.com/zp857/goutil v0.0.0-20240702083808-a20e9bc9fd5a h1:hwKL29aCSpjPeYdVWimieDn/3NHqy3vPcmRrxOjTAX8=
+github.com/zp857/goutil v0.0.0-20240702083808-a20e9bc9fd5a/go.mod h1:j+yVvFvEEKQPU1xVe7uGO1Ms1TdE9rn5lQcYL1Lj8n4=
 github.com/zp857/httpx v1.6.6-0.20240628072613-fc845aaf6bde h1:4O0zJxKwcYwhocrg86hYzYwp06p5Q288vidFRroSCEg=
 github.com/zp857/httpx v1.6.6-0.20240628072613-fc845aaf6bde/go.mod h1:P4S5c8rgB1mFrgTvG2DSQaMIKd1SQQp9BD1YnzTUgDk=
+github.com/zp857/util v0.0.0-20240122063709-e4aeff5ce744 h1:7mOizM1Rtawck1eLtxg3RR0exTO1HaPNlsBaoo9QWEg=
+github.com/zp857/util v0.0.0-20240122063709-e4aeff5ce744/go.mod h1:h5KFDrsWCNGnxw6qZ8r7zTyZnPxNsYgXM3xEZ5f/9bQ=
 go.etcd.io/bbolt v1.3.3/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
 go.etcd.io/bbolt v1.3.10 h1:+BqfJTcCzTItrop8mq/lbzL8wSGtj94UO/3U31shqG0=
 go.etcd.io/bbolt v1.3.10/go.mod h1:bK3UQLPJZly7IlNmV7uVHJDxfe5aK9Ll93e/74Y9oEQ=

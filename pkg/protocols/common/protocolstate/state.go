@@ -135,7 +135,6 @@ func Init(options *types.Options) error {
 	opts.SNIName = options.SNI
 	// this instance is used in javascript protocol libraries and
 	// dial history is required to get dialed ip of a host
-	opts.WithDialerHistory = true
 
 	// fastdialer now by default fallbacks to ztls when there are tls related errors
 	dialer, err := fastdialer.NewDialer(opts)

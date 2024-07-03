@@ -104,7 +104,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/tarunKoyalwar/goleak v0.0.0-20240429141123-0efa90dbdcf9
 	github.com/zmap/zgrab2 v0.1.8-0.20230806160807-97ba87c0e706
-	github.com/zp857/goutil v0.0.0-20240628034337-7f0eed791116
+	github.com/zp857/goutil v0.0.0-20240702083808-a20e9bc9fd5a
 	golang.org/x/term v0.21.0
 	gopkg.in/yaml.v3 v3.0.1
 	moul.io/http2curl v1.0.0
@@ -236,6 +236,7 @@ require (
 	github.com/yuin/goldmark-emoji v1.0.1 // indirect
 	github.com/zcalusic/sysinfo v1.0.2 // indirect
 	github.com/zeebo/blake3 v0.2.3 // indirect
+	github.com/zp857/util v0.0.0-20240122063709-e4aeff5ce744 // indirect
 	go.uber.org/goleak v1.3.0 // indirect
 	golang.org/x/arch v0.3.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
