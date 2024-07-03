@@ -208,10 +208,10 @@ func interfaceAddresses(interfaceName string) ([]net.Addr, error) {
 
 // Close closes the global shared fastdialer
 func Close() {
-	if Dialer != nil {
-		Dialer.Close()
-		Dialer = nil
-	}
-	Dialer = nil
+	//if Dialer != nil {
+	//	Dialer.Close()
+	//	Dialer = nil
+	//}
+	//Dialer = nil
 	StopActiveMemGuardian()
 }

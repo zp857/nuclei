@@ -845,11 +845,6 @@ func (request *Request) executeRequest(input *contextargs.Context, generatedRequ
 		} else {
 			if protocolstate.Dialer != nil {
 				outputEvent["ip"] = protocolstate.Dialer.GetDialedIP(hostname)
-			} else {
-				err = protocolstate.Init(request.options.Options)
-				if err == nil {
-					outputEvent["ip"] = protocolstate.Dialer.GetDialedIP(hostname)
-				}
 			}
 		}
 
@@ -948,11 +943,6 @@ func (request *Request) executeRequest(input *contextargs.Context, generatedRequ
 		} else {
 			if protocolstate.Dialer != nil {
 				outputEvent["ip"] = protocolstate.Dialer.GetDialedIP(hostname)
-			} else {
-				err = protocolstate.Init(request.options.Options)
-				if err == nil {
-					outputEvent["ip"] = protocolstate.Dialer.GetDialedIP(hostname)
-				}
 			}
 		}
 		if request.options.Interactsh != nil {
