@@ -3,18 +3,14 @@ package protocolstate
 import (
 	"context"
 	"fmt"
-	"net"
-	"net/url"
-
 	"github.com/go-sql-driver/mysql"
 	"github.com/pkg/errors"
-	"golang.org/x/net/proxy"
-
 	"github.com/projectdiscovery/fastdialer/fastdialer"
 	"github.com/projectdiscovery/mapcidr/asn"
 	"github.com/projectdiscovery/networkpolicy"
 	"github.com/projectdiscovery/nuclei/v3/pkg/types"
 	"github.com/projectdiscovery/nuclei/v3/pkg/utils/expand"
+	"net"
 )
 
 // Dialer is a shared fastdialer instance for host DNS resolution
@@ -102,27 +98,28 @@ func Init(options *types.Options) error {
 			},
 		}
 	}
-	if options.ProxySocksURL != "" {
-		proxyURL, err := url.Parse(options.ProxySocksURL)
-		if err != nil {
-			return err
-		}
-		var forward *net.Dialer
-		if opts.Dialer != nil {
-			forward = opts.Dialer
-		} else {
-			forward = &net.Dialer{
-				Timeout:   opts.DialerTimeout,
-				KeepAlive: opts.DialerKeepAlive,
-				DualStack: true,
-			}
-		}
-		dialer, err := proxy.FromURL(proxyURL, forward)
-		if err != nil {
-			return err
-		}
-		opts.ProxyDialer = &dialer
-	}
+
+	//if options.ProxySocksURL != "" {
+	//	proxyURL, err := url.Parse(options.ProxySocksURL)
+	//	if err != nil {
+	//		return err
+	//	}
+	//	var forward *net.Dialer
+	//	if opts.Dialer != nil {
+	//		forward = opts.Dialer
+	//	} else {
+	//		forward = &net.Dialer{
+	//			Timeout:   opts.DialerTimeout,
+	//			KeepAlive: opts.DialerKeepAlive,
+	//			DualStack: true,
+	//		}
+	//	}
+	//	dialer, err := proxy.FromURL(proxyURL, forward)
+	//	if err != nil {
+	//		return err
+	//	}
+	//	opts.ProxyDialer = &dialer
+	//}
 
 	if options.SystemResolvers {
 		opts.ResolversFile = true

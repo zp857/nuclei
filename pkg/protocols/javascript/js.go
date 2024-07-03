@@ -562,7 +562,9 @@ func (request *Request) executeRequestWithPayloads(hostPort string, input *conte
 				}
 			}
 		}
-		data["ip"] = protocolstate.Dialer.GetDialedIP(hostname)
+		if protocolstate.Dialer != nil {
+			data["ip"] = protocolstate.Dialer.GetDialedIP(hostname)
+		}
 		// if input itself was an ip, use it
 		if iputil.IsIP(hostname) {
 			data["ip"] = hostname

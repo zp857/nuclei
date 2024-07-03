@@ -25,7 +25,7 @@ require (
 	github.com/projectdiscovery/fastdialer v0.1.5
 	github.com/projectdiscovery/hmap v0.0.47
 	github.com/projectdiscovery/interactsh v1.2.0
-	github.com/projectdiscovery/rawhttp v0.1.51
+	github.com/projectdiscovery/rawhttp v0.1.55
 	github.com/projectdiscovery/retryabledns v1.0.65
 	github.com/projectdiscovery/retryablehttp-go v1.0.66
 	github.com/projectdiscovery/yamldoc-go v1.0.4
@@ -96,9 +96,9 @@ require (
 	github.com/projectdiscovery/sarif v0.0.1
 	github.com/projectdiscovery/tlsx v1.1.6
 	github.com/projectdiscovery/uncover v1.0.8
-	github.com/projectdiscovery/useragent v0.0.56
-	github.com/projectdiscovery/utils v0.1.4
-	github.com/projectdiscovery/wappalyzergo v0.1.6
+	github.com/projectdiscovery/useragent v0.0.57
+	github.com/projectdiscovery/utils v0.1.5
+	github.com/projectdiscovery/wappalyzergo v0.1.8
 	github.com/redis/go-redis/v9 v9.1.0
 	github.com/seh-msft/burpxml v1.0.1
 	github.com/stretchr/testify v1.9.0
@@ -205,7 +205,7 @@ require (
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/projectdiscovery/asnmap v1.1.0 // indirect
-	github.com/projectdiscovery/cdncheck v1.0.9 // indirect
+	github.com/projectdiscovery/cdncheck v1.1.0 // indirect
 	github.com/projectdiscovery/freeport v0.0.5 // indirect
 	github.com/projectdiscovery/ldapserver v1.0.2-0.20240219154113-dcc758ebc0cb // indirect
 	github.com/projectdiscovery/machineid v0.0.0-20240226150047-2e2c51e35983 // indirect
@@ -297,7 +297,6 @@ require (
 	github.com/trivago/tgo v1.0.7
 	github.com/ulikunitz/xz v0.5.12 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
-	github.com/yl2chen/cidranger v1.0.2 // indirect
 	github.com/ysmood/goob v0.4.0 // indirect
 	github.com/ysmood/gson v0.7.3 // indirect
 	github.com/ysmood/leakless v0.8.0 // indirect
@@ -354,3 +353,5 @@ require (
 
 // https://go.dev/ref/mod#go-mod-file-retract
 retract v3.2.0 // retract due to broken js protocol issue
+
+replace github.com/projectdiscovery/httpx v1.6.3 => github.com/zp857/httpx v1.6.6-0.20240628072613-fc845aaf6bde
